@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import 'express-async-errors';
 import express, { NextFunction, Request, Response } from 'express';
-import kafka from 'kafka-node';
 import database from './database';
 import { ZodError, z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
@@ -9,8 +8,7 @@ import { Event } from './domain';
 import { subDays } from 'date-fns';
 import morgan from 'morgan';
 import { formatSimpleDate } from './view';
-
-const kafkaClient = new kafka.KafkaClient();
+import queue from './queue';
 
 const app = express();
 app.use(express.json());
@@ -29,6 +27,13 @@ app.post('/events/sync', async (request: Request, response: Response) => {
   const eventDto = await eventSchema.parseAsync(request.body);
   const event = Event.fromDTO({ ...eventDto, dispatchedAt: new Date() });
   await database.saveEvent(event);
+  return response.sendStatus(200);
+});
+
+app.post('/events/async', async (request: Request, response: Response) => {
+  const eventDto = await eventSchema.parseAsync(request.body);
+  const event = Event.fromDTO({ ...eventDto, dispatchedAt: new Date() });
+  await queue.addEvent(event);
   return response.sendStatus(200);
 });
 
@@ -60,6 +65,7 @@ app.use((error: any, request: Request, response: Response, next: NextFunction) =
 });
 
 async function bootstrap() {
+  await queue.setup();
   await database.start();
   app.listen(3000, () => {
     console.log('Serving at 3000');
