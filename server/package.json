@@ -7,7 +7,7 @@
     "dev": "nodemon --ext ts --exec ts-node app.ts",
     "test:load:sync": "yarn ts-node loadtests/events-sync.ts",
     "test:load:async": "yarn ts-node loadtests/events-async.ts",
-    "worker:start": "yarn ts-node events-worker/worker.ts"
+    "worker:dev": "nodemon --ext ts --exec ts-node events-worker/worker.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
