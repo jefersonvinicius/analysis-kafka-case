@@ -1,4 +1,4 @@
-import { CompressionTypes, Kafka, Partitioners } from 'kafkajs';
+import { CompressionTypes, Kafka, KafkaJSProtocolError, Partitioners } from 'kafkajs';
 import { Event } from './domain';
 
 const kafkaClient = new Kafka({
@@ -6,19 +6,26 @@ const kafkaClient = new Kafka({
   brokers: ['localhost:9092'],
 });
 
-const TOPIC = 'myevents';
+export const TOPIC = 'myevents';
 
 const producer = kafkaClient.producer({ createPartitioner: Partitioners.DefaultPartitioner });
+const admin = kafkaClient.admin();
 
 async function setup() {
-  const result = await kafkaClient.admin().fetchTopicMetadata({ topics: [TOPIC] });
-  console.log(result);
-  if (!result.topics[0]) {
-    console.log('Creating topic...');
-    await kafkaClient.admin().createTopics({
-      topics: [{ topic: TOPIC, numPartitions: 10, replicationFactor: 3 }],
-    });
+  try {
+    await admin.fetchTopicMetadata({ topics: [TOPIC] });
+  } catch (error: unknown) {
+    if (error instanceof KafkaJSProtocolError && error.type === 'UNKNOWN_TOPIC_OR_PARTITION') {
+      console.log('Creating topic...');
+      await admin.createTopics({
+        topics: [{ topic: TOPIC, numPartitions: 10 }],
+      });
+      return;
+    }
+
+    throw error;
   }
+
   await producer.connect();
 }
 
