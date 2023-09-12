@@ -64,12 +64,10 @@ app.use((error: any, request: Request, response: Response, next: NextFunction) =
   next(error);
 });
 
-async function bootstrap() {
+export async function bootstrap() {
   await queue.setup();
   await database.start();
   app.listen(3000, () => {
     console.log('Serving at 3000');
   });
 }
-
-bootstrap();

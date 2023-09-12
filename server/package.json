@@ -4,7 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon --ext ts --exec ts-node app.ts",
+    "build": "rm -rf dist && tsc",
+    "start:pm2": "yarn build && pm2 delete all && pm2 start dist/index-single.js -i max  --node-args=\"--max-old-space-size=4096\"",
+    "dev:single": "nodemon --ext ts --exec ts-node index-single.ts",
+    "dev:clusters": "nodemon --ext ts --exec ts-node index-clusters.ts",
     "test:load:sync": "yarn ts-node loadtests/events-sync.ts",
     "test:load:async": "yarn ts-node loadtests/events-async.ts",
     "worker:dev": "nodemon --ext ts --exec ts-node events-worker/worker.ts"

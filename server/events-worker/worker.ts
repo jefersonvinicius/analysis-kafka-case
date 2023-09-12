@@ -5,7 +5,7 @@ import database from '../database';
 import { TOPIC } from '../queue';
 
 const kafkaClient = new Kafka({
-  clientId: 'server',
+  clientId: 'worker',
   brokers: ['localhost:9092'],
 });
 
@@ -18,9 +18,10 @@ async function main() {
     await consumer.subscribe({ topic: TOPIC, fromBeginning: true });
   }
 
-  const runs = consumers.map((consumer) => {
+  const runs = consumers.map((consumer, index) => {
     return consumer.run({
       eachMessage: async (payload) => {
+        console.log(`CONSUMER ${index}`);
         const eventData = JSON.parse(String(payload.message.value ?? '{}'));
         const event = Event.fromDTO(eventData);
         console.log(`Event arrived on topic ${payload.topic} at partition ${payload.partition}`);

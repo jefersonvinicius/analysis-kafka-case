@@ -1,5 +1,6 @@
 import { CompressionTypes, Kafka, KafkaJSProtocolError, Partitioners } from 'kafkajs';
 import { Event } from './domain';
+import { randomUUID } from 'node:crypto';
 
 const kafkaClient = new Kafka({
   clientId: 'server',
@@ -34,7 +35,7 @@ async function addEvent(event: Event) {
     topic: TOPIC,
     messages: [
       {
-        key: event.campaign,
+        // key: event.campaign,
         value: JSON.stringify(event),
       },
     ],
