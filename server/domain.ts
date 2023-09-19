@@ -19,6 +19,16 @@ export class Event {
       dto.dispatchedAt || null
     );
   }
+
+  toJSON(): EventDto {
+    return {
+      id: this.id,
+      campaign: this.campaign,
+      name: this.name,
+      createdAt: this.createdAt,
+      dispatchedAt: this.dispatchedAt,
+    };
+  }
 }
 
 type EventDto = {

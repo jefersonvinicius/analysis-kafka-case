@@ -9,6 +9,7 @@ import { subDays } from 'date-fns';
 import morgan from 'morgan';
 import { formatSimpleDate } from './view';
 import queue from './queue';
+import cache from './caching';
 
 const app = express();
 app.use(express.json());
@@ -33,7 +34,14 @@ app.post('/events/sync', async (request: Request, response: Response) => {
 app.post('/events/async', async (request: Request, response: Response) => {
   const eventDto = await eventSchema.parseAsync(request.body);
   const event = Event.fromDTO({ ...eventDto, dispatchedAt: new Date() });
-  await queue.addEvent(event);
+  const cachedEvents = await cache.getEvents();
+  const events = [...cachedEvents, event];
+  if (events.length >= 20) {
+    await queue.addEvents(events);
+    await cache.clearEvents();
+  } else {
+    await cache.saveEvents(events);
+  }
   return response.sendStatus(200);
 });
 
@@ -65,7 +73,8 @@ app.use((error: any, request: Request, response: Response, next: NextFunction) =
 });
 
 export async function bootstrap() {
-  await queue.setup();
+  await cache.start();
+  await queue.start();
   await database.start();
   app.listen(3000, () => {
     console.log('Serving at 3000');

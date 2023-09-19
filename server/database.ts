@@ -21,6 +21,19 @@ async function saveEvent(event: Event) {
   await client.query(insertSQL, [event.name, event.campaign, event.dispatchedAt]);
 }
 
+async function saveEvents(events: Event[]) {
+  const insertSQL =
+    'INSERT INTO events (name, campaign, dispatched_at) VALUES ' +
+    events
+      .map((_, index) => {
+        const factor = index * 3;
+        return `($${1 + factor}, $${2 + factor}, $${3 + factor})`;
+      })
+      .join(',');
+  const values = events.map((event) => [event.name, event.campaign, event.dispatchedAt]).flat();
+  await client.query(insertSQL, values);
+}
+
 type GetAllEventsParams = {
   startAt: Date;
   finalAt: Date;
@@ -40,6 +53,7 @@ const database = {
   start,
   saveEvent,
   getAllEvents,
+  saveEvents,
 };
 
 export default database;

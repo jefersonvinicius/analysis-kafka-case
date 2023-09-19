@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { Kafka } from 'kafkajs';
-import { Event } from '../domain';
 import database from '../database';
 import { TOPIC } from '../queue';
+import { Event } from '../domain';
 
 const kafkaClient = new Kafka({
   clientId: 'worker',
@@ -20,14 +20,12 @@ async function main() {
 
   const runs = consumers.map((consumer, index) => {
     return consumer.run({
-      eachMessage: async (payload) => {
-        console.log(`CONSUMER ${index}`);
-        const eventData = JSON.parse(String(payload.message.value ?? '{}'));
-        const event = Event.fromDTO(eventData);
-        console.log(`Event arrived on topic ${payload.topic} at partition ${payload.partition}`);
-        console.log('Data: ', event);
-        await database.saveEvent(event);
-        console.log('Event saved.');
+      partitionsConsumedConcurrently: 10,
+      eachBatch: async (payload) => {
+        const eventsDto = payload.batch.messages.map((m) => JSON.parse(String(m.value) ?? '{}'));
+        const events = eventsDto.map(Event.fromDTO);
+        console.log(`Receiving batch of ${events.length} events on partition ${payload.batch.partition}`);
+        await database.saveEvents(events);
       },
     });
   });

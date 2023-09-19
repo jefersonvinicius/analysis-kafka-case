@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "start:pm2": "yarn build && pm2 delete all && pm2 start dist/index-single.js -i max  --node-args=\"--max-old-space-size=4096\"",
+    "start:pm2": "yarn build && pm2 kill && pm2 start dist/index-single.js -i max --node-args=\"--max-old-space-size=4096\"",
     "dev:single": "nodemon --ext ts --exec ts-node index-single.ts",
     "dev:clusters": "nodemon --ext ts --exec ts-node index-clusters.ts",
     "test:load:sync": "yarn ts-node loadtests/events-sync.ts",
@@ -32,6 +32,7 @@
     "kafkajs": "^2.2.4",
     "morgan": "^1.10.0",
     "pg": "^8.11.3",
+    "redis": "^4.6.8",
     "zod": "^3.22.2",
     "zod-validation-error": "^1.5.0"
   }

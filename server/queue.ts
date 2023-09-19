@@ -12,7 +12,7 @@ export const TOPIC = 'myevents';
 const producer = kafkaClient.producer({ createPartitioner: Partitioners.DefaultPartitioner });
 const admin = kafkaClient.admin();
 
-async function setup() {
+async function start() {
   try {
     await admin.fetchTopicMetadata({ topics: [TOPIC] });
   } catch (error: unknown) {
@@ -21,10 +21,9 @@ async function setup() {
       await admin.createTopics({
         topics: [{ topic: TOPIC, numPartitions: 10 }],
       });
-      return;
+    } else {
+      throw error;
     }
-
-    throw error;
   }
 
   await producer.connect();
@@ -35,7 +34,6 @@ async function addEvent(event: Event) {
     topic: TOPIC,
     messages: [
       {
-        // key: event.campaign,
         value: JSON.stringify(event),
       },
     ],
@@ -43,6 +41,18 @@ async function addEvent(event: Event) {
   });
 }
 
-const queue = { setup, addEvent };
+async function addEvents(events: Event[]) {
+  const key = randomUUID();
+  await producer.send({
+    topic: TOPIC,
+    messages: events.map((event) => ({
+      key,
+      value: JSON.stringify(event),
+    })),
+    acks: 0,
+  });
+}
+
+const queue = { start, addEvent, addEvents };
 
 export default queue;

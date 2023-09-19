@@ -22,8 +22,8 @@ services:
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_DELETE_TOPIC_ENABLE=true
-      - KAFKA_BATCH_SIZE
+      - KAFKA_CFG_DELETE_TOPIC_ENABLE=true
+      - KAFKA_CFG_LINGER_MS=10
   db:
     image: postgres:13
     ports:
@@ -32,6 +32,10 @@ services:
       - POSTGRES_PASSWORD=docker
     volumes:
       - ./.pgdata:/var/lib/postgresql/data
+  cache:
+    image: redis:7.2.1
+    ports: 
+      - 6379:6379
 volumes:
   kafka_data:
     driver: local

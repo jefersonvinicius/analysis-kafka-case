@@ -5,9 +5,9 @@ import { bootstrap } from './app';
 const numCPUs = os.availableParallelism();
 
 if (cluster.isPrimary) {
-  for (let instance = 0; instance < numCPUs; instance++) {
+  Array.from({ length: numCPUs }).forEach(() => {
     cluster.fork();
-  }
+  });
   cluster.on('exit', (worker) => {
     console.log(`Worker ${worker.process.pid} exited`);
   });
